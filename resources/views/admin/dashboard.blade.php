@@ -338,10 +338,17 @@
                         <td style="white-space:nowrap;">{{ $log->contact_number }}</td>
 
                         {{-- Delete Action --}}
+                        {{--
+                            BUG FIX: Replaced addslashes() inside inline JS with a data-* attribute.
+                            addslashes() + Blade escaping created a fragile double-escaping chain.
+                            Using data-client-name lets the HTML parser decode entities cleanly,
+                            and reading dataset.clientName in JS is XSS-safe.
+                        --}}
                         <td class="text-center">
                             <form method="POST"
                                   action="{{ route('admin.logs.destroy', $log) }}"
-                                  onsubmit="return confirm('Delete this record for {{ addslashes($log->client_name) }}? This cannot be undone.')">
+                                  data-client-name="{{ $log->client_name }}"
+                                  onsubmit="return confirm('Delete record for \'' + this.dataset.clientName + '\'?\nThis action cannot be undone.')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-outline-danger btn-sm"

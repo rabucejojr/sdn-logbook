@@ -11,7 +11,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Redirect already-authenticated users who visit guest-only routes
+        // (e.g., GET /login) to the admin dashboard instead of the default /.
+        $middleware->redirectUsersTo('/admin/dashboard');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

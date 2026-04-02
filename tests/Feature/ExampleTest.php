@@ -1,7 +1,8 @@
 <?php
 
-test('the application returns a successful response', function () {
+// Root route redirects to the public logbook form — assert the redirect.
+test('the application root redirects to the logbook form', function () {
     $response = $this->get('/');
 
-    $response->assertStatus(200);
+    $response->assertRedirect('/logbook');
 });

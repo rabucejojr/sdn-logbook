@@ -16,7 +16,13 @@ Route::get('/', fn () => redirect()->route('logbook.index'));
 // Public: Client Visit Logbook Form
 // ─────────────────────────────────────────────────────────────────────────────
 Route::get('/logbook', [LogbookController::class, 'index'])->name('logbook.index');
-Route::post('/logbook', [LogbookController::class, 'store'])->name('logbook.store');
+
+// BUG FIX: throttle:30,1 — max 30 submissions per minute per IP.
+// Prevents automated spam submissions to the public form.
+Route::post('/logbook', [LogbookController::class, 'store'])
+    ->name('logbook.store')
+    ->middleware('throttle:30,1');
+
 Route::get('/logbook/success', [LogbookController::class, 'success'])->name('logbook.success');
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -24,7 +30,11 @@ Route::get('/logbook/success', [LogbookController::class, 'success'])->name('log
 // ─────────────────────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [LoginController::class, 'login']);
+
+    // BUG FIX: throttle:5,1 — max 5 login attempts per minute per IP.
+    // Prevents brute-force attacks on the admin account.
+    Route::post('/login', [LoginController::class, 'login'])
+        ->middleware('throttle:5,1');
 });
 
 Route::post('/logout', [LoginController::class, 'logout'])
