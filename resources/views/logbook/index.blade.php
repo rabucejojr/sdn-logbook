@@ -86,7 +86,7 @@
                         class="form-select @error('gender') is-invalid @enderror"
                         required
                     >
-                        <option value="" disabled {{ old('gender') ? '' : 'selected' }}>— Select gender —</option>
+                        <option value="" disabled {{ old('gender') ? '' : 'selected' }}>Select gender</option>
                         @foreach(['Male', 'Female', 'Prefer not to say'] as $g)
                             <option value="{{ $g }}" {{ old('gender') === $g ? 'selected' : '' }}>{{ $g }}</option>
                         @endforeach
@@ -107,7 +107,7 @@
                         class="form-select @error('transaction_type') is-invalid @enderror"
                         required
                     >
-                        <option value="" disabled {{ old('transaction_type') ? '' : 'selected' }}>— Select transaction type —</option>
+                        <option value="" disabled {{ old('transaction_type') ? '' : 'selected' }}>Select transaction type</option>
                         @foreach(['SETUP', 'GIA', 'CEST', 'Scholarship', 'S&T Referrals', 'Others'] as $type)
                             <option value="{{ $type }}" {{ old('transaction_type') === $type ? 'selected' : '' }}>{{ $type }}</option>
                         @endforeach
@@ -171,7 +171,7 @@
                             name="contact_number"
                             class="form-control @error('contact_number') is-invalid @enderror"
                             value="{{ old('contact_number') }}"
-                            placeholder="09XXXXXXXXX or +639XXXXXXXXX"
+                            placeholder="09XXXXXXXXX"
                             required
                             maxlength="13"
                         >
@@ -179,7 +179,7 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="form-text">Philippine mobile format: 09XXXXXXXXX or +639XXXXXXXXX</div>
+                    <div class="form-text">Philippine mobile format: 09XXXXXXXXX</div>
                 </div>
 
                 {{-- ── Submit ── --}}
