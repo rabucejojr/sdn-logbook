@@ -49,6 +49,9 @@ class ExportController extends Controller
                 'Details of Transaction',
                 'Address',
                 'Contact Number',
+                'Email',
+                'Attended By',
+                'Remarks',
             ]);
 
             // Data rows
@@ -61,6 +64,9 @@ class ExportController extends Controller
                     $log->transaction_display,
                     $log->address,
                     $log->contact_number,
+                    $log->email ?? '',
+                    $log->attended_by ?? '',
+                    $log->remarks ?? '',
                 ]);
             }
 

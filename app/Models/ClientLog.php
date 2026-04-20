@@ -18,6 +18,9 @@ class ClientLog extends Model
         'transaction_other_details',
         'address',
         'contact_number',
+        'email',
+        'attended_by',
+        'remarks',
     ];
 
     protected $casts = [
@@ -58,7 +61,9 @@ class ClientLog extends Model
             $q->where('client_name', 'like', "%{$search}%")
               ->orWhere('firm_name', 'like', "%{$search}%")
               ->orWhere('address', 'like', "%{$search}%")
-              ->orWhere('transaction_type', 'like', "%{$search}%");
+              ->orWhere('transaction_type', 'like', "%{$search}%")
+              ->orWhere('attended_by', 'like', "%{$search}%")
+              ->orWhere('email', 'like', "%{$search}%");
         });
     }
 

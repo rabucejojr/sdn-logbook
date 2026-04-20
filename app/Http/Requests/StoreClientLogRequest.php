@@ -41,12 +41,18 @@ class StoreClientLogRequest extends FormRequest
 
             'address' => ['required', 'string', 'max:255'],
 
+            'email' => ['nullable', 'email', 'max:255'],
+
             // Philippine mobile: 09XXXXXXXXX or +639XXXXXXXXX
             'contact_number' => [
                 'required',
                 'string',
                 'regex:/^(\+?63|0)9\d{9}$/',
             ],
+
+            // Staff-only fields — filled by DOST personnel before client submits
+            'attended_by' => ['required', 'string', 'max:255'],
+            'remarks'     => ['nullable', 'string', 'max:1000'],
         ];
     }
 
@@ -58,6 +64,9 @@ class StoreClientLogRequest extends FormRequest
         return [
             'contact_number.regex' => 'Please enter a valid Philippine mobile number (e.g., 09XXXXXXXXX or +639XXXXXXXXX).',
             'transaction_other_details.required_if' => 'Please specify the transaction details when "Others" is selected.',
+            'attended_by.required' => 'Please enter the name of the staff member who attended to this client.',
+            'attended_by.max'      => 'Attended by may not exceed 255 characters.',
+            'remarks.max'          => 'Remarks may not exceed 1,000 characters.',
         ];
     }
 
@@ -74,6 +83,9 @@ class StoreClientLogRequest extends FormRequest
             'transaction_other_details'  => 'Transaction specification',
             'address'                    => 'Address',
             'contact_number'             => 'Contact Number',
+            'email'                      => 'Email Address',
+            'attended_by'                => 'Attended by',
+            'remarks'                    => 'Remarks',
         ];
     }
 }

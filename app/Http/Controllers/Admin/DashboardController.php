@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 class DashboardController extends Controller
 {
     // Allowed sort columns (whitelist to prevent SQL injection)
-    private const SORT_COLUMNS = ['date_visited', 'client_name', 'firm_name', 'address'];
+    private const SORT_COLUMNS = ['date_visited', 'client_name', 'firm_name', 'address', 'attended_by'];
 
     /**
      * Show the admin dashboard: analytics summary + filterable data table.

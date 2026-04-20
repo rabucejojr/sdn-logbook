@@ -44,6 +44,9 @@ class LogbookController extends Controller
             'transaction_other_details' => $otherDetails,
             'address'                   => $validated['address'],
             'contact_number'            => $validated['contact_number'],
+            'email'                     => $validated['email'] ?? null,
+            'attended_by'               => $validated['attended_by'],
+            'remarks'                   => $validated['remarks'] ?? null,
         ]);
 
         // Flash key so the success page knows it was reached via a real submission,

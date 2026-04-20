@@ -159,6 +159,9 @@
                 <th>Details of Transaction</th>
                 <th>Address</th>
                 <th>Contact #</th>
+                <th>Email</th>
+                <th>Attended By</th>
+                <th>Remarks</th>
             </tr>
         </thead>
         <tbody>
@@ -172,10 +175,13 @@
                     <td>{{ $log->transaction_display }}</td>
                     <td>{{ $log->address }}</td>
                     <td style="white-space:nowrap;">{{ $log->contact_number }}</td>
+                    <td>{{ $log->email ?? '—' }}</td>
+                    <td>{{ $log->attended_by ?? '—' }}</td>
+                    <td>{{ $log->remarks ?? '—' }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" style="text-align:center; padding:20px; color:#888;">
+                    <td colspan="11" style="text-align:center; padding:20px; color:#888;">
                         No records found.
                     </td>
                 </tr>

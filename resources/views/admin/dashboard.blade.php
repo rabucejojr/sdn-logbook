@@ -274,6 +274,16 @@
                         ])
                     </th>
                     <th>Contact #</th>
+                    <th>Email</th>
+                    <th>
+                        @include('admin.partials.sort-header', [
+                            'label'   => 'Attended by',
+                            'column'  => 'attended_by',
+                            'sortBy'  => $sortBy,
+                            'sortDir' => $sortDir,
+                        ])
+                    </th>
+                    <th>Remarks</th>
                     <th class="text-center">Action</th>
                 </tr>
             </thead>
@@ -337,6 +347,27 @@
                         {{-- Contact --}}
                         <td style="white-space:nowrap;">{{ $log->contact_number }}</td>
 
+                        {{-- Email --}}
+                        <td>
+                            @if($log->email)
+                                <a href="mailto:{{ $log->email }}" class="text-decoration-none" style="font-size:0.88rem;">{{ $log->email }}</a>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
+
+                        {{-- Attended By --}}
+                        <td>{{ $log->attended_by ?? '—' }}</td>
+
+                        {{-- Remarks (truncated; full text on hover) --}}
+                        <td>
+                            @if($log->remarks)
+                                <span title="{{ $log->remarks }}">{{ Str::limit($log->remarks, 60) }}</span>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
+
                         {{-- Delete Action --}}
                         {{--
                             BUG FIX: Replaced addslashes() inside inline JS with a data-* attribute.
@@ -360,7 +391,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="text-center py-5 text-muted">
+                        <td colspan="11" class="text-center py-5 text-muted">
                             <i class="bi bi-inbox" style="font-size:2.5rem; display:block; margin-bottom:.5rem; opacity:.4;"></i>
                             No records found matching your filters.
                         </td>

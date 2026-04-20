@@ -99,7 +99,7 @@
                      onerror="this.style.display='none'">
                 <div>
                     <div class="agency-name">Department of Science and Technology</div>
-                    <div class="agency-sub">Surigao del Norte Provincial Office</div>
+                    <div class="agency-sub">Surigao del Norte</div>
                 </div>
             </div>
         </div>
