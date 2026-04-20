@@ -375,9 +375,17 @@
                             Using data-client-name lets the HTML parser decode entities cleanly,
                             and reading dataset.clientName in JS is XSS-safe.
                         --}}
-                        <td class="text-center">
+                        <td class="text-center" style="white-space:nowrap;">
+                            {{-- Edit --}}
+                            <a href="{{ route('admin.logs.edit', $log) }}"
+                               class="btn btn-outline-primary btn-sm me-1"
+                               title="Edit record">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {{-- Delete --}}
                             <form method="POST"
                                   action="{{ route('admin.logs.destroy', $log) }}"
+                                  class="d-inline"
                                   data-client-name="{{ $log->client_name }}"
                                   onsubmit="return confirm('Delete record for \'' + this.dataset.clientName + '\'?\nThis action cannot be undone.')">
                                 @csrf

@@ -52,6 +52,10 @@ Route::prefix('admin')->middleware('auth')->name('admin.')->group(function () {
     // Print-friendly log view — must be defined BEFORE the parameterised route
     Route::get('/logs/print', [ClientLogController::class, 'printView'])->name('logs.print');
 
+    // Edit / update a single record
+    Route::get('/logs/{clientLog}/edit', [ClientLogController::class, 'edit'])->name('logs.edit');
+    Route::put('/logs/{clientLog}', [ClientLogController::class, 'update'])->name('logs.update');
+
     // Delete a single record
     Route::delete('/logs/{clientLog}', [ClientLogController::class, 'destroy'])->name('logs.destroy');
 
