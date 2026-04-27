@@ -4,7 +4,12 @@
       "Bash(php --version)",
       "Bash(composer --version)",
       "Bash(php artisan:*)",
-      "Bash(./vendor/bin/pest tests/Unit/ClientLogModelTest.php)"
+      "Bash(./vendor/bin/pest tests/Unit/ClientLogModelTest.php)",
+      "Bash(dir \"C:\\\\xampp\\\\htdocs\\\\sdn-logbook\\\\resources\\\\views\\\\admin\" /b /s)",
+      "Bash(gh pr create --title '[feature] Add edit/update capability for admin log records' --body ' *)",
+      "Bash(where gh *)",
+      "Bash(winget list *)",
+      "Bash(curl --version)"
     ]
   }
 }
