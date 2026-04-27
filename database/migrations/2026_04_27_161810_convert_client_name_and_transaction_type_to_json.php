@@ -17,6 +17,9 @@ return new class extends Migration
 
         // Wrap existing single-value strings in JSON arrays
         if (DB::getDriverName() === 'pgsql') {
+            // Drop the enum CHECK constraint before updating — changing the column
+            // type to TEXT does NOT implicitly drop it, so the UPDATE would fail.
+            DB::statement('ALTER TABLE client_logs DROP CONSTRAINT IF EXISTS client_logs_transaction_type_check');
             DB::statement("UPDATE client_logs SET client_name = json_build_array(client_name)::text WHERE client_name NOT LIKE '[%'");
             DB::statement("UPDATE client_logs SET transaction_type = json_build_array(transaction_type)::text WHERE transaction_type NOT LIKE '[%'");
         } else {
