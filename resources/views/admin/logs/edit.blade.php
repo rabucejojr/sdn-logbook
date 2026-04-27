@@ -53,9 +53,17 @@
                 </a>
             </div>
 
+            @if($clientLog->status === 'pending')
+                <div class="alert alert-warning d-flex align-items-center gap-2 mb-4 py-2" role="alert">
+                    <i class="bi bi-hourglass-split"></i>
+                    <div>This record is <strong>pending approval</strong>. Fill in the staff fields below, then click <strong>Approve &amp; Save</strong>.</div>
+                </div>
+            @endif
+
             <form method="POST" action="{{ route('admin.logs.update', $clientLog) }}" novalidate>
                 @csrf
                 @method('PUT')
+                <input type="hidden" name="_approve" id="_approve_flag" value="0">
 
                 {{-- ── Date Visited ── --}}
                 <div class="mb-3">
@@ -99,22 +107,48 @@
                     @enderror
                 </div>
 
-                {{-- ── Name of Client ── --}}
+                {{-- ── Name of Client(s) ── --}}
                 <div class="mb-3">
-                    <label for="client_name" class="form-label">
+                    <label class="form-label">
                         Name of Client <span class="text-danger">*</span>
+                        <span class="text-muted fw-normal" style="font-size:0.82rem;">(add more if multiple clients)</span>
                     </label>
-                    <input
-                        type="text"
-                        id="client_name"
-                        name="client_name"
-                        class="form-control @error('client_name') is-invalid @enderror"
-                        value="{{ old('client_name', $clientLog->client_name) }}"
-                        maxlength="255"
-                        required
-                    >
+
+                    @php
+                        $existingNames = old('client_name', (array) $clientLog->client_name);
+                    @endphp
+
+                    <div id="client-names-wrapper">
+                        @foreach($existingNames as $i => $name)
+                        <div class="client-name-row d-flex gap-2 mb-2 align-items-start">
+                            <input
+                                type="text"
+                                name="client_name[]"
+                                class="form-control"
+                                value="{{ $name }}"
+                                placeholder="e.g., Juan dela Cruz"
+                                required
+                                maxlength="255"
+                                autocomplete="name"
+                            >
+                            <button type="button"
+                                    class="btn btn-outline-danger btn-remove-client {{ $i === 0 ? 'd-none' : '' }}"
+                                    title="Remove this client" style="min-width:38px;">
+                                <i class="bi bi-dash-lg"></i>
+                            </button>
+                        </div>
+                        @endforeach
+                    </div>
+
+                    <button type="button" id="btn-add-client" class="btn btn-outline-primary btn-sm mt-1">
+                        <i class="bi bi-plus-lg me-1"></i>Add another client
+                    </button>
+
                     @error('client_name')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
+                    @error('client_name.*')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
                     @enderror
                 </div>
 
@@ -141,33 +175,49 @@
                     @enderror
                 </div>
 
-                {{-- ── Details of Transaction ── --}}
+                {{-- ── Details of Transaction (multi-select checkboxes) ── --}}
                 <div class="mb-3">
-                    <label for="transaction_type" class="form-label">
+                    <label class="form-label">
                         Details of Transaction <span class="text-danger">*</span>
+                        <span class="text-muted fw-normal" style="font-size:0.82rem;">(select all that apply)</span>
                     </label>
-                    <select
-                        id="transaction_type"
-                        name="transaction_type"
-                        class="form-select @error('transaction_type') is-invalid @enderror"
-                        required
-                    >
-                        @foreach(['SETUP', 'GIA', 'CEST', 'Scholarship', 'S&T Referrals', 'Others'] as $type)
-                            <option value="{{ $type }}"
-                                {{ old('transaction_type', $clientLog->transaction_type) === $type ? 'selected' : '' }}>
-                                {{ $type }}
-                            </option>
-                        @endforeach
-                    </select>
+
+                    @php
+                        $selectedTypes = old('transaction_type', (array) $clientLog->transaction_type);
+                    @endphp
+
+                    <div class="border rounded p-3 @error('transaction_type') border-danger @enderror"
+                         style="background:#f8fafc;">
+                        <div class="row g-2">
+                            @foreach(['SETUP', 'GIA', 'CEST', 'Scholarship', 'S&T Referrals', 'Others'] as $type)
+                            <div class="col-6 col-sm-4">
+                                <div class="form-check">
+                                    <input
+                                        class="form-check-input transaction-checkbox"
+                                        type="checkbox"
+                                        name="transaction_type[]"
+                                        id="tx_{{ Str::slug($type) }}"
+                                        value="{{ $type }}"
+                                        {{ in_array($type, $selectedTypes) ? 'checked' : '' }}
+                                    >
+                                    <label class="form-check-label" for="tx_{{ Str::slug($type) }}">
+                                        {{ $type }}
+                                    </label>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+
                     @error('transaction_type')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="text-danger small mt-1">{{ $message }}</div>
                     @enderror
                 </div>
 
                 {{-- ── Conditional: "Others" textarea ── --}}
                 <div class="mb-3" id="other-details-wrapper" style="display:none;">
                     <label for="transaction_other_details" class="form-label">
-                        Please specify <span class="text-danger">*</span>
+                        Please specify (Others) <span class="text-danger">*</span>
                     </label>
                     <textarea
                         id="transaction_other_details"
@@ -300,12 +350,24 @@
 
                 {{-- ── Actions ── --}}
                 <div class="d-flex gap-2 justify-content-end">
-                    <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-x-lg me-1"></i>Cancel
-                    </a>
-                    <button type="submit" class="btn btn-primary px-4">
-                        <i class="bi bi-floppy me-2"></i>Save Changes
-                    </button>
+                    @if($clientLog->status === 'pending')
+                        <a href="{{ route('admin.pending.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Back
+                        </a>
+                        <button type="submit" class="btn btn-outline-secondary px-4">
+                            <i class="bi bi-floppy me-2"></i>Save Only
+                        </button>
+                        <button type="button" id="btn-approve-save" class="btn btn-success px-4">
+                            <i class="bi bi-check-circle me-2"></i>Approve &amp; Save
+                        </button>
+                    @else
+                        <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-floppy me-2"></i>Save Changes
+                        </button>
+                    @endif
                 </div>
 
             </form>
@@ -319,17 +381,62 @@
 (function () {
     'use strict';
 
-    // ── Transaction type toggle ──────────────────────────────────────────────
-    const typeSelect   = document.getElementById('transaction_type');
-    const otherWrapper = document.getElementById('other-details-wrapper');
-    const otherField   = document.getElementById('transaction_other_details');
-    const charCount    = document.getElementById('char-count');
+    // ── Dynamic client name rows ─────────────────────────────────────────────
+    const namesWrapper = document.getElementById('client-names-wrapper');
+    const btnAddClient = document.getElementById('btn-add-client');
+
+    function refreshRemoveButtons() {
+        const rows = namesWrapper.querySelectorAll('.client-name-row');
+        rows.forEach(function (row) {
+            const btn = row.querySelector('.btn-remove-client');
+            if (btn) btn.classList.toggle('d-none', rows.length === 1);
+        });
+    }
+
+    namesWrapper.addEventListener('click', function (e) {
+        const btn = e.target.closest('.btn-remove-client');
+        if (!btn) return;
+        btn.closest('.client-name-row').remove();
+        refreshRemoveButtons();
+    });
+
+    btnAddClient.addEventListener('click', function () {
+        const row = document.createElement('div');
+        row.className = 'client-name-row d-flex gap-2 mb-2 align-items-start';
+        row.innerHTML =
+            '<input type="text" name="client_name[]" class="form-control"' +
+            ' placeholder="e.g., Maria Santos" required maxlength="255" autocomplete="name">' +
+            '<button type="button" class="btn btn-outline-danger btn-remove-client"' +
+            ' title="Remove this client" style="min-width:38px;">' +
+            '<i class="bi bi-dash-lg"></i></button>';
+        namesWrapper.appendChild(row);
+        row.querySelector('input').focus();
+        refreshRemoveButtons();
+    });
+
+    refreshRemoveButtons();
+
+    // ── Approve & Save button ────────────────────────────────────────────────
+    const btnApproveSave = document.getElementById('btn-approve-save');
+    if (btnApproveSave) {
+        btnApproveSave.addEventListener('click', function () {
+            document.getElementById('_approve_flag').value = '1';
+            this.closest('form').submit();
+        });
+    }
+
+    // ── Transaction checkboxes — toggle "Others" textarea ───────────────────
+    const otherWrapper  = document.getElementById('other-details-wrapper');
+    const otherField    = document.getElementById('transaction_other_details');
+    const charCount     = document.getElementById('char-count');
+    const txCheckboxes  = document.querySelectorAll('.transaction-checkbox');
 
     function toggleOtherField() {
-        const isOthers = typeSelect.value === 'Others';
-        otherWrapper.style.display = isOthers ? 'block' : 'none';
-        otherField.required = isOthers;
-        if (!isOthers) {
+        const othersBox = document.getElementById('tx_others');
+        const show = othersBox && othersBox.checked;
+        otherWrapper.style.display = show ? 'block' : 'none';
+        otherField.required = show;
+        if (!show) {
             otherField.value = '';
             charCount.textContent = '0';
         }
@@ -339,7 +446,9 @@
         charCount.textContent = otherField.value.length;
     }
 
-    typeSelect.addEventListener('change', toggleOtherField);
+    txCheckboxes.forEach(function (cb) {
+        cb.addEventListener('change', toggleOtherField);
+    });
     otherField.addEventListener('input', updateCharCount);
     toggleOtherField();
     updateCharCount();

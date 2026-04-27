@@ -5,6 +5,23 @@
 
 @section('content')
 
+{{-- ─── Pending Submissions Notification ─────────────────────────────────── --}}
+@if($pendingCount > 0)
+    <div class="d-flex align-items-center justify-content-between mb-3 mt-1 px-3 py-2 rounded-3"
+         style="background:#fffbeb; border:1px solid #fcd34d;">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-bell-fill" style="color:#f59e0b; font-size:1.1rem;"></i>
+            <div>
+                <strong>{{ $pendingCount }} new client submission{{ $pendingCount > 1 ? 's' : '' }}</strong>
+                {{ $pendingCount > 1 ? 'are' : 'is' }} awaiting your review and approval.
+            </div>
+        </div>
+        <a href="{{ route('admin.pending.index') }}" class="btn btn-warning btn-sm fw-semibold">
+            Review Now <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+    </div>
+@endif
+
 {{-- ═══════════════════════════════════════════════════════════════════════════
     ANALYTICS — Stat Cards
 ══════════════════════════════════════════════════════════════════════════════ --}}
@@ -300,7 +317,7 @@
                         <td>{{ $log->firm_name }}</td>
 
                         {{-- Client --}}
-                        <td style="font-weight:500;">{{ $log->client_name }}</td>
+                        <td style="font-weight:500;">{{ $log->client_name_display }}</td>
 
                         {{-- Gender --}}
                         <td>
@@ -321,20 +338,22 @@
                         <td>
                             @php
                                 $txColors = [
-                                    'SETUP'        => ['bg' => '#dbeafe', 'color' => '#1e40af'],
-                                    'GIA'          => ['bg' => '#dcfce7', 'color' => '#166534'],
-                                    'CEST'         => ['bg' => '#fef9c3', 'color' => '#854d0e'],
-                                    'Scholarship'  => ['bg' => '#fce7f3', 'color' => '#9d174d'],
-                                    'S&T Referrals'=> ['bg' => '#ede9fe', 'color' => '#5b21b6'],
-                                    'Others'       => ['bg' => '#f3f4f6', 'color' => '#374151'],
+                                    'SETUP'         => ['bg' => '#dbeafe', 'color' => '#1e40af'],
+                                    'GIA'           => ['bg' => '#dcfce7', 'color' => '#166534'],
+                                    'CEST'          => ['bg' => '#fef9c3', 'color' => '#854d0e'],
+                                    'Scholarship'   => ['bg' => '#fce7f3', 'color' => '#9d174d'],
+                                    'S&T Referrals' => ['bg' => '#ede9fe', 'color' => '#5b21b6'],
+                                    'Others'        => ['bg' => '#f3f4f6', 'color' => '#374151'],
                                 ];
-                                $txStyle = $txColors[$log->transaction_type] ?? $txColors['Others'];
                             @endphp
-                            <span class="badge"
-                                  style="background:{{ $txStyle['bg'] }}; color:{{ $txStyle['color'] }}; font-size:0.75rem; font-weight:500;">
-                                {{ $log->transaction_type }}
-                            </span>
-                            @if($log->transaction_type === 'Others' && $log->transaction_other_details)
+                            @foreach((array) $log->transaction_type as $txType)
+                                @php $txStyle = $txColors[$txType] ?? $txColors['Others']; @endphp
+                                <span class="badge me-1"
+                                      style="background:{{ $txStyle['bg'] }}; color:{{ $txStyle['color'] }}; font-size:0.75rem; font-weight:500;">
+                                    {{ $txType }}
+                                </span>
+                            @endforeach
+                            @if(in_array('Others', (array) $log->transaction_type) && $log->transaction_other_details)
                                 <div class="text-muted mt-1" style="font-size:0.78rem; max-width:160px;">
                                     {{ Str::limit($log->transaction_other_details, 50) }}
                                 </div>
@@ -386,7 +405,7 @@
                             <form method="POST"
                                   action="{{ route('admin.logs.destroy', $log) }}"
                                   class="d-inline"
-                                  data-client-name="{{ $log->client_name }}"
+                                  data-client-name="{{ $log->client_name_display }}"
                                   onsubmit="return confirm('Delete record for \'' + this.dataset.clientName + '\'?\nThis action cannot be undone.')">
                                 @csrf
                                 @method('DELETE')

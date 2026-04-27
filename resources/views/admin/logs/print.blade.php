@@ -170,7 +170,7 @@
                     <td>{{ $i + 1 }}</td>
                     <td style="white-space:nowrap;">{{ $log->date_visited->format('M d, Y H:i') }}</td>
                     <td>{{ $log->firm_name }}</td>
-                    <td>{{ $log->client_name }}</td>
+                    <td>{{ $log->client_name_display }}</td>
                     <td>{{ $log->gender }}</td>
                     <td>{{ $log->transaction_display }}</td>
                     <td>{{ $log->address }}</td>

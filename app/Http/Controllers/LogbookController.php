@@ -31,7 +31,7 @@ class LogbookController extends Controller
         // BUG FIX: Always clear other_details unless the type is "Others".
         // Without this, an attacker could POST transaction_other_details
         // even when a non-Others type is selected, polluting the database.
-        $otherDetails = $validated['transaction_type'] === 'Others'
+        $otherDetails = in_array('Others', (array) ($validated['transaction_type'] ?? []))
             ? ($validated['transaction_other_details'] ?? null)
             : null;
 
@@ -45,8 +45,9 @@ class LogbookController extends Controller
             'address'                   => $validated['address'],
             'contact_number'            => $validated['contact_number'],
             'email'                     => $validated['email'] ?? null,
-            'attended_by'               => $validated['attended_by'],
-            'remarks'                   => $validated['remarks'] ?? null,
+            'attended_by'               => null,
+            'remarks'                   => null,
+            'status'                    => 'pending',
         ]);
 
         // Flash key so the success page knows it was reached via a real submission,
