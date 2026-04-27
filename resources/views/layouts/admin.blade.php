@@ -220,6 +220,16 @@
                 <i class="bi bi-speedometer2"></i> Dashboard
             </a>
 
+            <a href="{{ route('admin.pending.index') }}"
+               class="nav-link d-flex align-items-center justify-content-between {{ request()->routeIs('admin.pending.*') ? 'active' : '' }}">
+                <span><i class="bi bi-hourglass-split"></i> Pending</span>
+                @if($pendingCount > 0)
+                    <span class="badge rounded-pill" style="background:#ef4444; font-size:0.68rem; min-width:20px;">
+                        {{ $pendingCount }}
+                    </span>
+                @endif
+            </a>
+
             <a href="{{ route('admin.logs.print') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}"
                class="nav-link" target="_blank">
                 <i class="bi bi-printer"></i> Print View
@@ -258,7 +268,21 @@
         {{-- Top Navbar --}}
         <div class="top-navbar">
             <span class="page-title">@yield('page-title', 'Dashboard')</span>
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-3">
+                {{-- Notification bell --}}
+                @if($pendingCount > 0)
+                    <a href="{{ route('admin.pending.index') }}"
+                       class="position-relative text-decoration-none"
+                       title="{{ $pendingCount }} pending submission(s)">
+                        <i class="bi bi-bell-fill" style="font-size:1.15rem; color:#f59e0b;"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                              style="font-size:0.6rem; min-width:16px; padding:2px 5px;">
+                            {{ $pendingCount }}
+                        </span>
+                    </a>
+                @else
+                    <i class="bi bi-bell text-secondary" style="font-size:1.15rem;" title="No pending submissions"></i>
+                @endif
                 <i class="bi bi-person-circle text-secondary"></i>
                 <span style="font-size:0.875rem; color:#4a5568;">{{ auth()->user()->email }}</span>
             </div>

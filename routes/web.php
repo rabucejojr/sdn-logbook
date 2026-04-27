@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ClientLogController;
 use App\Http\Controllers\Admin\ExportController;
+use App\Http\Controllers\Admin\PendingController;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Root redirect
@@ -61,4 +62,8 @@ Route::prefix('admin')->middleware('auth')->name('admin.')->group(function () {
 
     // CSV Export (applies same filters as current dashboard view)
     Route::get('/export/csv', [ExportController::class, 'exportCsv'])->name('export.csv');
+
+    // Pending approvals
+    Route::get('/pending', [PendingController::class, 'index'])->name('pending.index');
+    Route::delete('/pending/{clientLog}/reject', [PendingController::class, 'reject'])->name('pending.reject');
 });

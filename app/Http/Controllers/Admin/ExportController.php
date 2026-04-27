@@ -16,7 +16,7 @@ class ExportController extends Controller
      */
     public function exportCsv(Request $request): StreamedResponse
     {
-        $logs = ClientLog::query()
+        $logs = ClientLog::approved()
             ->search($request->input('search'))
             ->dateRange($request->input('date_from'), $request->input('date_to'))
             ->filterGender($request->input('gender'))
@@ -59,7 +59,7 @@ class ExportController extends Controller
                 fputcsv($handle, [
                     $log->date_visited->format('Y-m-d H:i:s'),
                     $log->firm_name,
-                    $log->client_name,
+                    $log->client_name_display,
                     $log->gender,
                     $log->transaction_display,
                     $log->address,

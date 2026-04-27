@@ -19,14 +19,17 @@ class ClientLogController extends Controller
 
     /**
      * Validate and persist updates to a single log record.
+     * When _approve=1 is submitted, the record is also marked approved.
      */
     public function update(UpdateClientLogRequest $request, ClientLog $clientLog)
     {
         $validated = $request->validated();
 
-        $otherDetails = $validated['transaction_type'] === 'Others'
+        $otherDetails = in_array('Others', (array) ($validated['transaction_type'] ?? []))
             ? ($validated['transaction_other_details'] ?? null)
             : null;
+
+        $isApproving = $request->input('_approve') === '1';
 
         $clientLog->update([
             'date_visited'              => $validated['date_visited'],
@@ -40,10 +43,16 @@ class ClientLogController extends Controller
             'email'                     => $validated['email'] ?? null,
             'attended_by'               => $validated['attended_by'],
             'remarks'                   => $validated['remarks'] ?? null,
+            'status'                    => $isApproving ? 'approved' : $clientLog->status,
         ]);
 
+        if ($isApproving) {
+            return redirect()->route('admin.pending.index')
+                ->with('success', 'Record for "' . $clientLog->client_name_display . '" has been approved.');
+        }
+
         return redirect()->route('admin.dashboard')
-            ->with('success', 'Record for "' . $clientLog->client_name . '" updated successfully.');
+            ->with('success', 'Record for "' . $clientLog->client_name_display . '" updated successfully.');
     }
 
     /**
@@ -63,7 +72,7 @@ class ClientLogController extends Controller
      */
     public function printView(Request $request)
     {
-        $logs = ClientLog::query()
+        $logs = ClientLog::approved()
             ->search($request->input('search'))
             ->dateRange($request->input('date_from'), $request->input('date_to'))
             ->filterGender($request->input('gender'))

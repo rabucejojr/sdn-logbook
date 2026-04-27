@@ -18,45 +18,50 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         // -------------------------------------------------------------------------
-        // Analytics: Visitor Counts
+        // Pending count (for notification card)
         // -------------------------------------------------------------------------
-        $totalVisitors = ClientLog::count();
+        $pendingCount = ClientLog::pending()->count();
 
-        $todayVisitors = ClientLog::whereDate('date_visited', today())->count();
+        // -------------------------------------------------------------------------
+        // Analytics: Visitor Counts (approved records only)
+        // -------------------------------------------------------------------------
+        $totalVisitors = ClientLog::approved()->count();
 
-        $weekVisitors = ClientLog::whereBetween('date_visited', [
+        $todayVisitors = ClientLog::approved()->whereDate('date_visited', today())->count();
+
+        $weekVisitors = ClientLog::approved()->whereBetween('date_visited', [
             now()->startOfWeek(),
             now()->endOfWeek(),
         ])->count();
 
-        $monthVisitors = ClientLog::whereMonth('date_visited', now()->month)
+        $monthVisitors = ClientLog::approved()
+            ->whereMonth('date_visited', now()->month)
             ->whereYear('date_visited', now()->year)
             ->count();
 
         // -------------------------------------------------------------------------
-        // Analytics: Chart Data
+        // Analytics: Chart Data (approved records only)
         // -------------------------------------------------------------------------
 
-        // Transaction type distribution (for pie chart)
-        $transactionDistribution = ClientLog::select(
-                'transaction_type',
-                DB::raw('COUNT(*) as count')
-            )
-            ->groupBy('transaction_type')
-            ->pluck('count', 'transaction_type')
-            ->toArray();
+        // Transaction type distribution — each record may have multiple types,
+        // so we count occurrences of each value across all JSON arrays.
+        $transactionDistribution = [];
+        ClientLog::approved()->select('transaction_type')->get()->each(function ($log) use (&$transactionDistribution) {
+            foreach ((array) $log->transaction_type as $type) {
+                $transactionDistribution[$type] = ($transactionDistribution[$type] ?? 0) + 1;
+            }
+        });
 
         // Gender distribution (for pie chart)
-        $genderDistribution = ClientLog::select(
-                'gender',
-                DB::raw('COUNT(*) as count')
-            )
+        $genderDistribution = ClientLog::approved()
+            ->select('gender', DB::raw('COUNT(*) as count'))
             ->groupBy('gender')
             ->pluck('count', 'gender')
             ->toArray();
 
         // Daily visitor counts for the last 30 days (for line/bar chart)
-        $visitorsOverTime = ClientLog::select(
+        $visitorsOverTime = ClientLog::approved()
+            ->select(
                 DB::raw('DATE(date_visited) as visit_date'),
                 DB::raw('COUNT(*) as count')
             )
@@ -68,10 +73,8 @@ class DashboardController extends Controller
             ->toArray();
 
         // Top 10 municipalities/cities by visit count (for bar chart)
-        $topMunicipalities = ClientLog::select(
-                'address',
-                DB::raw('COUNT(*) as count')
-            )
+        $topMunicipalities = ClientLog::approved()
+            ->select('address', DB::raw('COUNT(*) as count'))
             ->groupBy('address')
             ->orderByDesc('count')
             ->limit(10)
@@ -95,7 +98,7 @@ class DashboardController extends Controller
         }
         $sortDir = $sortDir === 'asc' ? 'asc' : 'desc';
 
-        $logs = ClientLog::query()
+        $logs = ClientLog::approved()
             ->search($search)
             ->dateRange($dateFrom, $dateTo)
             ->filterGender($genderFilter)
@@ -108,6 +111,8 @@ class DashboardController extends Controller
         $genders          = ['Male', 'Female', 'Prefer not to say'];
 
         return view('admin.dashboard', compact(
+            // Pending notification
+            'pendingCount',
             // Analytics
             'totalVisitors', 'todayVisitors', 'weekVisitors', 'monthVisitors',
             'transactionDistribution', 'genderDistribution',

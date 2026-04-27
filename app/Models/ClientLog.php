@@ -21,10 +21,13 @@ class ClientLog extends Model
         'email',
         'attended_by',
         'remarks',
+        'status',
     ];
 
     protected $casts = [
-        'date_visited' => 'datetime',
+        'date_visited'    => 'datetime',
+        'client_name'     => 'array',
+        'transaction_type' => 'array',
     ];
 
     // -------------------------------------------------------------------------
@@ -32,16 +35,26 @@ class ClientLog extends Model
     // -------------------------------------------------------------------------
 
     /**
-     * Returns a display-friendly transaction label.
-     * If type is "Others", appends the free-text details.
+     * Comma-joined list of all client names (single or multiple).
+     */
+    public function getClientNameDisplayAttribute(): string
+    {
+        return implode(', ', (array) $this->client_name);
+    }
+
+    /**
+     * Comma-joined transaction types; "Others" entry appends the free-text detail.
      */
     public function getTransactionDisplayAttribute(): string
     {
-        if ($this->transaction_type === 'Others' && $this->transaction_other_details) {
-            return 'Others: ' . $this->transaction_other_details;
-        }
+        $parts = array_map(function (string $type): string {
+            if ($type === 'Others' && $this->transaction_other_details) {
+                return 'Others: ' . $this->transaction_other_details;
+            }
+            return $type;
+        }, (array) $this->transaction_type);
 
-        return $this->transaction_type;
+        return implode(', ', $parts);
     }
 
     // -------------------------------------------------------------------------
@@ -96,7 +109,7 @@ class ClientLog extends Model
     }
 
     /**
-     * Filter by transaction type value.
+     * Filter by a single transaction type value within the JSON array.
      */
     public function scopeFilterTransaction(Builder $query, ?string $type): Builder
     {
@@ -104,6 +117,16 @@ class ClientLog extends Model
             return $query;
         }
 
-        return $query->where('transaction_type', $type);
+        return $query->whereJsonContains('transaction_type', $type);
+    }
+
+    public function scopeApproved(Builder $query): Builder
+    {
+        return $query->where('status', 'approved');
+    }
+
+    public function scopePending(Builder $query): Builder
+    {
+        return $query->where('status', 'pending');
     }
 }

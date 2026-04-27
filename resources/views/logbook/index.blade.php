@@ -55,23 +55,64 @@
                     @enderror
                 </div>
 
-                {{-- ── Name of Client ── --}}
+                {{-- ── Name of Client(s) ── --}}
                 <div class="mb-3">
-                    <label for="client_name" class="form-label">
+                    <label class="form-label">
                         Name of Client <span class="text-danger">*</span>
+                        <span class="text-muted fw-normal" style="font-size:0.82rem;">(add more if multiple clients)</span>
                     </label>
-                    <input
-                        type="text"
-                        id="client_name"
-                        name="client_name"
-                        class="form-control @error('client_name') is-invalid @enderror"
-                        value="{{ old('client_name') }}"
-                        placeholder="e.g., Juan dela Cruz"
-                        required
-                        autocomplete="name"
-                    >
+
+                    <div id="client-names-wrapper">
+                        {{-- First client name row (always present) --}}
+                        <div class="client-name-row d-flex gap-2 mb-2 align-items-start">
+                            <input
+                                type="text"
+                                name="client_name[]"
+                                class="form-control @error('client_name.0') is-invalid @enderror"
+                                value="{{ old('client_name.0', is_array(old('client_name')) ? old('client_name')[0] ?? '' : '') }}"
+                                placeholder="e.g., Juan dela Cruz"
+                                required
+                                autocomplete="name"
+                            >
+                            <button type="button" class="btn btn-outline-danger btn-remove-client d-none"
+                                    title="Remove this client" style="min-width:38px;">
+                                <i class="bi bi-dash-lg"></i>
+                            </button>
+                        </div>
+
+                        {{-- Additional client rows from old() on validation failure --}}
+                        @if(is_array(old('client_name')))
+                            @foreach(old('client_name') as $i => $name)
+                                @if($i > 0)
+                                <div class="client-name-row d-flex gap-2 mb-2 align-items-start">
+                                    <input
+                                        type="text"
+                                        name="client_name[]"
+                                        class="form-control"
+                                        value="{{ $name }}"
+                                        placeholder="e.g., Maria Santos"
+                                        required
+                                        autocomplete="name"
+                                    >
+                                    <button type="button" class="btn btn-outline-danger btn-remove-client"
+                                            title="Remove this client" style="min-width:38px;">
+                                        <i class="bi bi-dash-lg"></i>
+                                    </button>
+                                </div>
+                                @endif
+                            @endforeach
+                        @endif
+                    </div>
+
+                    <button type="button" id="btn-add-client" class="btn btn-outline-primary btn-sm mt-1">
+                        <i class="bi bi-plus-lg me-1"></i>Add another client
+                    </button>
+
                     @error('client_name')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
+                    @error('client_name.*')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
                     @enderror
                 </div>
 
@@ -96,31 +137,45 @@
                     @enderror
                 </div>
 
-                {{-- ── Details of Transaction ── --}}
+                {{-- ── Details of Transaction (multiple) ── --}}
                 <div class="mb-3">
-                    <label for="transaction_type" class="form-label">
+                    <label class="form-label">
                         Details of Transaction <span class="text-danger">*</span>
+                        <span class="text-muted fw-normal" style="font-size:0.82rem;">(select all that apply)</span>
                     </label>
-                    <select
-                        id="transaction_type"
-                        name="transaction_type"
-                        class="form-select @error('transaction_type') is-invalid @enderror"
-                        required
-                    >
-                        <option value="" disabled {{ old('transaction_type') ? '' : 'selected' }}>Select transaction type</option>
-                        @foreach(['SETUP', 'GIA', 'CEST', 'Scholarship', 'S&T Referrals', 'Others'] as $type)
-                            <option value="{{ $type }}" {{ old('transaction_type') === $type ? 'selected' : '' }}>{{ $type }}</option>
-                        @endforeach
-                    </select>
+
+                    <div class="border rounded p-3 @error('transaction_type') border-danger @enderror"
+                         style="background:#f8fafc;">
+                        <div class="row g-2">
+                            @foreach(['SETUP', 'GIA', 'CEST', 'Scholarship', 'S&T Referrals', 'Others'] as $type)
+                            <div class="col-6 col-sm-4">
+                                <div class="form-check">
+                                    <input
+                                        class="form-check-input transaction-checkbox"
+                                        type="checkbox"
+                                        name="transaction_type[]"
+                                        id="tx_{{ Str::slug($type) }}"
+                                        value="{{ $type }}"
+                                        {{ is_array(old('transaction_type')) && in_array($type, old('transaction_type')) ? 'checked' : '' }}
+                                    >
+                                    <label class="form-check-label" for="tx_{{ Str::slug($type) }}">
+                                        {{ $type }}
+                                    </label>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+
                     @error('transaction_type')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="text-danger small mt-1">{{ $message }}</div>
                     @enderror
                 </div>
 
                 {{-- ── Conditional: "Others" specification textarea ── --}}
                 <div class="mb-3" id="other-details-wrapper" style="display: none;">
                     <label for="transaction_other_details" class="form-label">
-                        Please specify <span class="text-danger">*</span>
+                        Please specify (Others) <span class="text-danger">*</span>
                     </label>
                     <textarea
                         id="transaction_other_details"
@@ -206,62 +261,6 @@
                     </div>
                 </div>
 
-                {{-- ── For Staff Use Only ── --}}
-                <div class="card border-warning mb-4" style="background-color:#fffbeb;">
-                    <div class="card-header d-flex align-items-center gap-2 py-2"
-                         style="background-color:#fef3c7; border-bottom:1px solid #fcd34d;">
-                        <i class="bi bi-lock-fill text-warning"></i>
-                        <span class="fw-bold text-warning-emphasis" style="font-size:0.95rem; letter-spacing:0.03em;">
-                            FOR STAFF USE ONLY
-                        </span>
-                    </div>
-                    <div class="card-body pt-3 pb-2">
-
-                        {{-- Attended By --}}
-                        <div class="mb-3">
-                            <label for="attended_by" class="form-label fw-semibold">
-                                Assisted by <span class="text-danger">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                id="attended_by"
-                                name="attended_by"
-                                class="form-control @error('attended_by') is-invalid @enderror"
-                                value="{{ old('attended_by') }}"
-                                placeholder="Name / Position"
-                                maxlength="255"
-                                autocomplete="off"
-                            >
-                            @error('attended_by')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        {{-- Remarks --}}
-                        <div class="mb-1">
-                            <label for="remarks" class="form-label fw-semibold">
-                                Remarks
-                                <span class="text-muted fw-normal" style="font-size:0.82rem;">(optional)</span>
-                            </label>
-                            <textarea
-                                id="remarks"
-                                name="remarks"
-                                rows="3"
-                                class="form-control @error('remarks') is-invalid @enderror"
-                                placeholder="Any notes about this transaction…"
-                                maxlength="1000"
-                            >{{ old('remarks') }}</textarea>
-                            <div class="form-text text-end">
-                                <span id="remarks-char-count">0</span>/1000 characters
-                            </div>
-                            @error('remarks')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                    </div>
-                </div>
-
                 {{-- ── Review & Submit ── --}}
                 <div class="d-grid">
                     <button type="button" id="btn-review" class="btn btn-primary btn-lg">
@@ -300,7 +299,7 @@
                                     <td id="rv-firm_name" class="fw-semibold"></td>
                                 </tr>
                                 <tr>
-                                    <th class="table-light">Name of Client</th>
+                                    <th class="table-light">Name of Client(s)</th>
                                     <td id="rv-client_name" class="fw-semibold"></td>
                                 </tr>
                                 <tr>
@@ -326,22 +325,6 @@
                             </tbody>
                         </table>
 
-                        {{-- Staff Information --}}
-                        <h6 class="fw-bold text-uppercase mb-2" style="font-size:0.78rem; letter-spacing:0.06em; color:#6b7280;">
-                            <i class="bi bi-lock-fill me-1"></i>Staff Entry
-                        </h6>
-                        <table class="table table-sm table-bordered mb-0" style="font-size:0.92rem;">
-                            <tbody>
-                                <tr>
-                                    <th class="table-light" style="width:38%;">Attended by</th>
-                                    <td id="rv-attended_by" class="fw-semibold"></td>
-                                </tr>
-                                <tr>
-                                    <th class="table-light">Remarks</th>
-                                    <td id="rv-remarks"></td>
-                                </tr>
-                            </tbody>
-                        </table>
                     </div>
 
                     <div class="modal-footer d-flex justify-content-between">
@@ -373,17 +356,58 @@
 (function () {
     'use strict';
 
-    // ── Transaction type toggle ──────────────────────────────────────────────
-    const typeSelect   = document.getElementById('transaction_type');
-    const otherWrapper = document.getElementById('other-details-wrapper');
-    const otherField   = document.getElementById('transaction_other_details');
-    const charCount    = document.getElementById('char-count');
+    // ── Dynamic client name rows ─────────────────────────────────────────────
+    const namesWrapper  = document.getElementById('client-names-wrapper');
+    const btnAddClient  = document.getElementById('btn-add-client');
+
+    function refreshRemoveButtons() {
+        const rows = namesWrapper.querySelectorAll('.client-name-row');
+        rows.forEach(function (row) {
+            const btn = row.querySelector('.btn-remove-client');
+            if (btn) btn.classList.toggle('d-none', rows.length === 1);
+        });
+    }
+
+    function addClientRow() {
+        const row = document.createElement('div');
+        row.className = 'client-name-row d-flex gap-2 mb-2 align-items-start';
+        row.innerHTML =
+            '<input type="text" name="client_name[]" class="form-control"' +
+            ' placeholder="e.g., Maria Santos" required autocomplete="name">' +
+            '<button type="button" class="btn btn-outline-danger btn-remove-client"' +
+            ' title="Remove this client" style="min-width:38px;">' +
+            '<i class="bi bi-dash-lg"></i></button>';
+        namesWrapper.appendChild(row);
+        row.querySelector('input').focus();
+        refreshRemoveButtons();
+    }
+
+    namesWrapper.addEventListener('click', function (e) {
+        const btn = e.target.closest('.btn-remove-client');
+        if (!btn) return;
+        btn.closest('.client-name-row').remove();
+        refreshRemoveButtons();
+    });
+
+    btnAddClient.addEventListener('click', addClientRow);
+    refreshRemoveButtons();
+
+    // ── Transaction checkboxes — toggle "Others" textarea ───────────────────
+    const otherWrapper  = document.getElementById('other-details-wrapper');
+    const otherField    = document.getElementById('transaction_other_details');
+    const charCount     = document.getElementById('char-count');
+    const txCheckboxes  = document.querySelectorAll('.transaction-checkbox');
+
+    function isOthersChecked() {
+        const cb = document.getElementById('tx_others');
+        return cb && cb.checked;
+    }
 
     function toggleOtherField() {
-        const isOthers = typeSelect.value === 'Others';
-        otherWrapper.style.display = isOthers ? 'block' : 'none';
-        otherField.required = isOthers;
-        if (!isOthers) {
+        const show = isOthersChecked();
+        otherWrapper.style.display = show ? 'block' : 'none';
+        otherField.required = show;
+        if (!show) {
             otherField.value = '';
             charCount.textContent = '0';
         }
@@ -393,67 +417,102 @@
         charCount.textContent = otherField.value.length;
     }
 
-    typeSelect.addEventListener('change', toggleOtherField);
+    txCheckboxes.forEach(function (cb) {
+        cb.addEventListener('change', toggleOtherField);
+    });
     otherField.addEventListener('input', updateCharCount);
     toggleOtherField();
     updateCharCount();
 
-    // ── Remarks character counter ────────────────────────────────────────────
-    const remarksField = document.getElementById('remarks');
-    const remarksCount = document.getElementById('remarks-char-count');
-    if (remarksField && remarksCount) {
-        remarksCount.textContent = remarksField.value.length;
-        remarksField.addEventListener('input', function () {
-            remarksCount.textContent = this.value.length;
-        });
-    }
-
     // ── Review modal ─────────────────────────────────────────────────────────
-    const form           = document.querySelector('form[action="{{ route('logbook.store') }}"]');
-    const btnReview      = document.getElementById('btn-review');
-    const btnConfirm     = document.getElementById('btn-confirm-submit');
-    const reviewModalEl  = document.getElementById('reviewModal');
-    const reviewModal    = new bootstrap.Modal(reviewModalEl);
+    const form          = document.querySelector('form[action="{{ route('logbook.store') }}"]');
+    const btnReview     = document.getElementById('btn-review');
+    const btnConfirm    = document.getElementById('btn-confirm-submit');
+    const reviewModalEl = document.getElementById('reviewModal');
+    const reviewModal   = new bootstrap.Modal(reviewModalEl);
 
-    // Helper: return value or a placeholder when the field is blank
     function val(id) {
         const el = document.getElementById(id);
-        if (!el) return '';
-        return el.value.trim() || '';
+        return el ? el.value.trim() : '';
     }
-
-    function blank(str) { return str === ''; }
 
     function setCell(id, text, isRequired) {
         const cell = document.getElementById(id);
         if (!cell) return;
-        if (blank(text) && isRequired) {
+        if (!text && isRequired) {
             cell.innerHTML = '<span class="text-danger fst-italic">— not provided —</span>';
-        } else if (blank(text)) {
+        } else if (!text) {
             cell.innerHTML = '<span class="text-muted fst-italic">— none —</span>';
         } else {
             cell.textContent = text;
         }
     }
 
-    function populateReview() {
-        setCell('rv-firm_name',    val('firm_name'),    true);
-        setCell('rv-client_name',  val('client_name'),  true);
-        setCell('rv-gender',       val('gender'),       true);
-        setCell('rv-address',      val('address'),      true);
-        setCell('rv-contact_number', val('contact_number'), true);
-        setCell('rv-email',        val('email'),         false);
-        setCell('rv-attended_by',  val('attended_by'),  true);
-        setCell('rv-remarks',      val('remarks'),      false);
-
-        // Transaction — combine type + other details when "Others"
-        const txType    = val('transaction_type');
-        const txOther   = val('transaction_other_details');
-        let txDisplay   = txType;
-        if (txType === 'Others' && txOther) {
-            txDisplay = 'Others: ' + txOther;
+    function setCellHtml(id, html, isRequired) {
+        const cell = document.getElementById(id);
+        if (!cell) return;
+        if (!html && isRequired) {
+            cell.innerHTML = '<span class="text-danger fst-italic">— not provided —</span>';
+        } else if (!html) {
+            cell.innerHTML = '<span class="text-muted fst-italic">— none —</span>';
+        } else {
+            cell.innerHTML = html;
         }
-        setCell('rv-transaction', txDisplay, true);
+    }
+
+    function populateReview() {
+        setCell('rv-firm_name',      val('firm_name'),      true);
+        setCell('rv-gender',         val('gender'),         true);
+        setCell('rv-address',        val('address'),        true);
+        setCell('rv-contact_number', val('contact_number'), true);
+        setCell('rv-email',          val('email'),          false);
+
+        // Collect all client names
+        const nameInputs = namesWrapper.querySelectorAll('input[name="client_name[]"]');
+        const names = Array.from(nameInputs)
+            .map(function (i) { return i.value.trim(); })
+            .filter(Boolean);
+        if (names.length > 1) {
+            const listHtml = '<ol class="mb-0 ps-3">' +
+                names.map(function (n) { return '<li>' + escHtml(n) + '</li>'; }).join('') +
+                '</ol>';
+            setCellHtml('rv-client_name', listHtml, true);
+        } else {
+            setCell('rv-client_name', names[0] || '', true);
+        }
+
+        // Collect checked transaction types
+        const checked = Array.from(txCheckboxes)
+            .filter(function (cb) { return cb.checked; })
+            .map(function (cb) { return cb.value; });
+        let txDisplay = '';
+        if (checked.length) {
+            const withOther = checked.map(function (t) {
+                if (t === 'Others') {
+                    const detail = otherField.value.trim();
+                    return detail ? 'Others: ' + detail : 'Others';
+                }
+                return t;
+            });
+            if (withOther.length > 1) {
+                txDisplay = '<ul class="mb-0 ps-3">' +
+                    withOther.map(function (t) { return '<li>' + escHtml(t) + '</li>'; }).join('') +
+                    '</ul>';
+                setCellHtml('rv-transaction', txDisplay, true);
+            } else {
+                setCell('rv-transaction', withOther[0], true);
+            }
+        } else {
+            setCell('rv-transaction', '', true);
+        }
+    }
+
+    function escHtml(str) {
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
     }
 
     btnReview.addEventListener('click', function () {
@@ -461,9 +520,7 @@
         reviewModal.show();
     });
 
-    // Confirm button actually submits the form
     btnConfirm.addEventListener('click', function () {
-        // Disable to prevent double-click
         btnConfirm.disabled = true;
         btnConfirm.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Submitting…';
         form.submit();
