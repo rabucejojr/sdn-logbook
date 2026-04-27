@@ -35,15 +35,29 @@
         }
 
         .site-header .agency-name {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 700;
             color: #fff;
             letter-spacing: 0.02em;
+            line-height: 1.3;
         }
 
         .site-header .agency-sub {
             font-size: 0.78rem;
             color: rgba(255,255,255,0.75);
+        }
+
+        .site-header img {
+            height: 48px;
+            width: 48px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 575.98px) {
+            .site-header img { height: 36px; width: 36px; }
+            .site-header .agency-name { font-size: 0.88rem; }
+            .site-header .agency-sub  { font-size: 0.72rem; }
         }
 
         /* ── Content card ── */
@@ -52,6 +66,10 @@
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.07);
             padding: 2.5rem;
+        }
+
+        @media (max-width: 575.98px) {
+            .content-card { padding: 1.25rem 1rem; border-radius: 8px; }
         }
 
         /* ── Footer ── */
@@ -95,7 +113,6 @@
                 {{-- DOST Logo placeholder (replace src with actual logo path) --}}
                 <img src="{{ asset('images/dost-logo.png') }}"
                      alt="DOST Logo"
-                     style="height:48px; width:48px; object-fit:contain;"
                      onerror="this.style.display='none'">
                 <div>
                     <div class="agency-name">Department of Science and Technology</div>
